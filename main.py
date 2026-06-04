@@ -22,7 +22,8 @@ _aruco_detector = cv2.aruco.ArucoDetector(
 
 
 def detect_and_annotate(frame: np.ndarray) -> np.ndarray:
-    """Detect DICT_6X6 ArUco markers and draw green corner dots in-place."""
+    """Detect DICT_6X6 ArUco markers and draw green corner dots on a copy of the frame."""
+    frame = frame.copy()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     corners, _, _ = _aruco_detector.detectMarkers(gray)
     for marker_corners in corners:
