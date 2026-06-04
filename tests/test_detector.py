@@ -29,3 +29,17 @@ def test_detects_synthetic_marker():
     assert not np.array_equal(result, original), "no green dots were drawn — detection may have failed"
     green_mask = (result[:, :, 0] == 0) & (result[:, :, 1] == 255) & (result[:, :, 2] == 0)
     assert green_mask.any(), "no pure-green corner dots found in output"
+
+
+def test_draws_marker_id_next_to_marker():
+    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
+    marker_img = cv2.aruco.generateImageMarker(aruco_dict, 0, 200)
+    frame = np.full((400, 500, 3), 255, dtype=np.uint8)
+    frame[100:300, 100:300] = cv2.cvtColor(marker_img, cv2.COLOR_GRAY2BGR)
+
+    result = detect_and_annotate(frame)
+
+    label_area = result[95:145, 310:405]
+    assert not np.array_equal(
+        label_area, frame[95:145, 310:405]
+    ), "marker ID label was not drawn next to the marker"

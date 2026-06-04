@@ -22,13 +22,36 @@ _aruco_detector = cv2.aruco.ArucoDetector(
 
 
 def detect_and_annotate(frame: np.ndarray) -> np.ndarray:
-    """Detect DICT_6X6 ArUco markers and draw green corner dots on a copy of the frame."""
+    """Detect DICT_6X6 ArUco markers and draw corner dots plus IDs on a copy of the frame."""
     frame = frame.copy()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    corners, _, _ = _aruco_detector.detectMarkers(gray)
-    for marker_corners in corners:
-        for pt in marker_corners[0].astype(int):
+    corners, ids, _ = _aruco_detector.detectMarkers(gray)
+    for index, marker_corners in enumerate(corners):
+        points = marker_corners[0].astype(int)
+        for pt in points:
             cv2.circle(frame, tuple(pt), 10, (0, 255, 0), -1)
+
+        if ids is None:
+            continue
+
+        marker_id = int(ids[index][0])
+        label = f"ID {marker_id}"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1.6
+        thickness = 3
+        text_size, baseline = cv2.getTextSize(label, font, font_scale, thickness)
+        text_w, text_h = text_size
+        frame_h, frame_w = frame.shape[:2]
+        x = int(points[:, 0].max()) + 12
+        y = int(points[:, 1].min()) + text_h
+
+        if x + text_w >= frame_w:
+            x = int(points[:, 0].min()) - text_w - 12
+        x = max(0, min(x, frame_w - text_w - 1))
+        y = max(text_h + baseline, min(y, frame_h - baseline - 1))
+
+        cv2.putText(frame, label, (x, y), font, font_scale, (0, 0, 0), thickness + 10, cv2.LINE_8)
+        cv2.putText(frame, label, (x, y), font, font_scale, (0, 255, 0), thickness, cv2.LINE_8)
     return frame
 
 
