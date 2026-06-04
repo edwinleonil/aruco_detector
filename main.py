@@ -1,3 +1,4 @@
+import math
 import queue
 import threading
 import tkinter as tk
@@ -38,12 +39,16 @@ def parse_camera_settings(gain_str: str, exposure_str: str) -> tuple[float, floa
         gain = float(gain_str)
     except ValueError:
         raise ValueError(f"gain must be numeric, got '{gain_str}'")
+    if not math.isfinite(gain):
+        raise ValueError(f"gain must be a finite number, got '{gain_str}'")
+    if gain < 0:
+        raise ValueError(f"gain must be >= 0, got {gain}")
     try:
         exposure = float(exposure_str)
     except ValueError:
         raise ValueError(f"exposure must be numeric, got '{exposure_str}'")
-    if gain < 0:
-        raise ValueError(f"gain must be >= 0, got {gain}")
+    if not math.isfinite(exposure):
+        raise ValueError(f"exposure must be a finite number, got '{exposure_str}'")
     if exposure < 0:
         raise ValueError(f"exposure must be >= 0, got {exposure}")
     return gain, exposure
