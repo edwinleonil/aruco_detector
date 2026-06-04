@@ -28,7 +28,7 @@ def detect_and_annotate(frame: np.ndarray) -> np.ndarray:
     corners, _, _ = _aruco_detector.detectMarkers(gray)
     for marker_corners in corners:
         for pt in marker_corners[0].astype(int):
-            cv2.circle(frame, tuple(pt), 5, (0, 255, 0), -1)
+            cv2.circle(frame, tuple(pt), 10, (0, 255, 0), -1)
     return frame
 
 
