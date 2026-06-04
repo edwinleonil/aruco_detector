@@ -2,7 +2,6 @@ import math
 import queue
 import threading
 import tkinter as tk
-from tkinter import ttk
 import cv2
 import numpy as np
 from PIL import Image, ImageTk
@@ -206,18 +205,15 @@ class App(tk.Tk):
         exposure = max(cam.ExposureTime.Min, min(cam.ExposureTime.Max, exposure))
         cam.Gain.Value = gain
         cam.ExposureTime.Value = exposure
-        self._status_var.set(f"Applied: gain={gain:.2f}  exposure={exposure:.0f} µs")
+        self._status_var.set(f"Applied: gain={gain:.2f} exposure={exposure:.0f} µs")
 
     # ---- Frame polling ----
 
     def _poll_frames(self) -> None:
         # Check if thread died with an error
-        if (
-            self._camera_thread is not None
-            and not self._camera_thread.is_alive()
-            and self._camera_thread.error
-        ):
-            self._status_var.set(f"Error: {self._camera_thread.error}")
+        if self._camera_thread is not None and not self._camera_thread.is_alive():
+            err = self._camera_thread.error or "camera stopped unexpectedly"
+            self._status_var.set(f"Error: {err}")
             self._camera_thread = None
             self._btn_connect.config(state=tk.NORMAL)
             self._btn_disconnect.config(state=tk.DISABLED)
@@ -232,6 +228,7 @@ class App(tk.Tk):
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             img = Image.fromarray(rgb).resize((nw, nh), Image.NEAREST)
             self._photo = ImageTk.PhotoImage(img)
+            self._canvas.delete("all")
             self._canvas.create_image(cw // 2, ch // 2, anchor=tk.CENTER, image=self._photo)
         except queue.Empty:
             pass
