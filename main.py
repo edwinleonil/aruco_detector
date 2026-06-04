@@ -52,3 +52,49 @@ def parse_camera_settings(gain_str: str, exposure_str: str) -> tuple[float, floa
     if exposure < 0:
         raise ValueError(f"exposure must be >= 0, got {exposure}")
     return gain, exposure
+
+
+# ---------------------------------------------------------------------------
+# Camera grab thread
+# ---------------------------------------------------------------------------
+class CameraThread(threading.Thread):
+    def __init__(self, frame_queue: queue.Queue):
+        super().__init__(daemon=True)
+        self._queue = frame_queue
+        self._stop_event = threading.Event()
+        self.camera: pylon.InstantCamera | None = None
+        self.error: str | None = None
+
+    def run(self) -> None:
+        try:
+            self.camera = pylon.InstantCamera(
+                pylon.TlFactory.GetInstance().CreateFirstDevice()
+            )
+            self.camera.StartGrabbing(pylon.GrabStrategy_LatestImageOnly)
+            converter = pylon.ImageFormatConverter()
+            converter.OutputPixelFormat = pylon.PixelType_BGR8packed
+            converter.OutputBitAlignment = pylon.OutputBitAlignment_MsbAligned
+
+            while not self._stop_event.is_set() and self.camera.IsGrabbing():
+                grab = self.camera.RetrieveResult(
+                    5000, pylon.TimeoutHandling_ThrowException
+                )
+                if grab.GrabSucceeded():
+                    img = converter.Convert(grab)
+                    frame = img.GetArray().copy()
+                    annotated = detect_and_annotate(frame)
+                    try:
+                        self._queue.put_nowait(annotated)
+                    except queue.Full:
+                        pass
+                grab.Release()
+        except Exception as exc:
+            self.error = str(exc)
+        finally:
+            if self.camera is not None:
+                if self.camera.IsGrabbing():
+                    self.camera.StopGrabbing()
+                self.camera.Close()
+
+    def stop(self) -> None:
+        self._stop_event.set()
