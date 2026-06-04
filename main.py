@@ -89,7 +89,8 @@ class CameraThread(threading.Thread):
                         pass
                 grab.Release()
         except Exception as exc:
-            self.error = str(exc)
+            if not self._stop_event.is_set():
+                self.error = str(exc)
         finally:
             if self.camera is not None:
                 if self.camera.IsGrabbing():
