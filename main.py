@@ -29,7 +29,7 @@ def detect_and_annotate(frame: np.ndarray) -> np.ndarray:
     for index, marker_corners in enumerate(corners):
         points = marker_corners[0].astype(int)
         for pt in points:
-            cv2.circle(frame, tuple(pt), 10, (0, 255, 0), -1)
+            cv2.circle(frame, tuple(pt), 18, (0, 255, 0), -1)
 
         if ids is None:
             continue
@@ -37,8 +37,8 @@ def detect_and_annotate(frame: np.ndarray) -> np.ndarray:
         marker_id = int(ids[index][0])
         label = f"ID {marker_id}"
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1.6
-        thickness = 3
+        font_scale = 2.4
+        thickness = 4
         text_size, baseline = cv2.getTextSize(label, font, font_scale, thickness)
         text_w, text_h = text_size
         frame_h, frame_w = frame.shape[:2]
